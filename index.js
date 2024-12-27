@@ -3,7 +3,6 @@ const dotenv = require('dotenv');
 const dbConnect = require("./config/dbConfig")
 
 dotenv.config();
-
 const app = express();
 const PORT = process.env.PORT || 4000;
 const authRouter = require("./routes/authRoute");
@@ -13,8 +12,8 @@ const productRouter = require("./routes/productRoute");
 const blogRouter = require("./routes/blogRoutes");
 const productCategoryRouter = require("./routes/productCategoryRoutes");
 const blogCategoryRouter = require("./routes/blogCategoryRoutes");
-
 const brandRoute = require("./routes/brandRoute");
+const couponRoute = require("./routes/couponRoutes");
 const morgan = require("morgan")
 dbConnect();
 
@@ -30,10 +29,11 @@ app.use("/api/blog", blogRouter);
 app.use("/api/category", productCategoryRouter);
 app.use("/api/blogCategory", blogCategoryRouter);
 app.use("/api/brand", brandRoute);
+app.use("/api/coupon", couponRoute);
 
 // Error handling middleware
 app.use(notFound);
-app.use(errorHandler)
+app.use(errorHandler);
 
 // Connect to MongoDB
 app.listen(PORT, () => {
