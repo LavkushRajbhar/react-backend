@@ -7,20 +7,18 @@ cloudinary.config({
 });
 
 const cloudinaryUploadImg = async (fileToUploads) => {
-    return new Promise((resolve) => {
-        cloudinary.uploader.upload(fileToUploads, (result) => {
-            resolve({
-                url: result.secure_url,
-
-            },
-                { resource_type: 'auto' },
-            );
-
-        });
-
+    return new Promise((resolve, reject) => {
+        cloudinary.uploader.upload(
+            fileToUploads,
+            { resource_type: 'auto' }, // Ensure options are correctly placed
+            (error, result) => {
+                if (error) reject(error); // Reject on error
+                else resolve({ url: result.secure_url }); // Resolve with secure URL
+            }
+        );
     });
-
 };
+
 
 
 module.exports= cloudinaryUploadImg

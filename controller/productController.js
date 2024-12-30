@@ -2,7 +2,9 @@ const Product = require("../models/productModel");
 const asyncHandler = require("express-async-handler");
 const slugify = require("slugify");
 const User = require("../models/userModel");
-
+const validateMongoDbId = require("../utils/validateMongodbId");
+const cloudinaryUploadImg = require("../utils/cloudinary")
+const fs = require("fs");
 // create product
 const createProduct = asyncHandler(async (req, res) => {
 
@@ -164,7 +166,7 @@ const addToWishlist = asyncHandler(async (req, res) => {
 
 const rating = asyncHandler(async (req, res) => {
     const { id } = req.user; // Logged-in user's ID
-    const { star, prodId,comment } = req.body; // Star rating and product ID
+    const { star, prodId, comment } = req.body; // Star rating and product ID
 
     try {
         const product = await Product.findById(prodId); // Fetch the product
@@ -206,7 +208,7 @@ const rating = asyncHandler(async (req, res) => {
         const getAllRatings = await Product.findById(prodId);
         let totalRating = getAllRatings.ratings.length;
         let sumRating = getAllRatings.ratings.map((item) =>
-            item.star).reduce((prev,curr) => prev+curr, 0);
+            item.star).reduce((prev, curr) => prev + curr, 0);
         let actualRating = Math.round(sumRating / totalRating)
         let finalProduct = await Product.findByIdAndUpdate(prodId, {
             totalRating: actualRating
@@ -218,4 +220,38 @@ const rating = asyncHandler(async (req, res) => {
 });
 
 
-module.exports = { createProduct, getAProduct, getAllProduct, updateProducts, deleteProducts, addToWishlist, rating }
+
+const uploadImages = asyncHandler(async (req, res) => {
+    const { id } = req.params;
+    validateMongoDbId(id);
+    try {
+        const uploader = (path) => cloudinaryUploadImg(path, "images");
+        const urls = [];
+        const files = req.files;
+
+        for (const file of files) {
+            const { path } = file;
+            console.log('Uploading file:', path); // Debugging log
+            const newPath = await uploader(path);
+            urls.push(newPath.url); // Extract URL
+            fs.unlinkSync(path); // Delete the local file after uploading to Cloudinary
+        }
+
+        console.log('Uploaded URLs:', urls); // Debugging log
+
+        const findProduct = await Product.findByIdAndUpdate(
+            id,
+            { images: urls },
+            { new: true }
+        );
+
+        console.log('Updated Product:', findProduct); // Debugging log
+
+        res.json(findProduct);
+    } catch (error) {
+        console.error('Error in uploadImages:', error); // Log errors
+        throw new Error("Invalid product ID");
+    }
+});
+
+module.exports = { createProduct, getAProduct, getAllProduct, updateProducts, deleteProducts, addToWishlist, rating, uploadImages }

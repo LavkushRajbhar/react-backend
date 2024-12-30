@@ -1,9 +1,10 @@
 const multer = require('multer');
 const sharp = require('sharp');
 const path = require('path');
+const fs = require('fs');
 
 
-const mutlerStorage = multer.diskStorage({
+const multerStorage = multer.diskStorage({
     destination: function (req, file, cb) {
         cb(null, path.join(__dirname, "../public/images"));
     },
@@ -17,16 +18,13 @@ const mutlerStorage = multer.diskStorage({
 
 
 const multerFilter = (req, file, cb) => {
-    if (file.mimeType.startswith("image")) {
-
-        cb(null, true);
-
+    if (file.mimetype.startsWith("image")) { // Correct property name is mimetype
+        cb(null, true); // Accept the file
+    } else {
+        cb(new Error("Unsupported or Invalid file format."), false); // Reject the file
     }
-    else {
-        cb({ message: "Unsupported or Invalid file format." }, false);
+};
 
-    }
-}
 
 
 const uploadPhoto = multer({
@@ -37,13 +35,72 @@ const uploadPhoto = multer({
 
 // Resize image middleware
 
+
+const blogImgResize = async (req, res, next) => {
+    if (!req.files) return next(); // If no files, proceed to the next middleware
+
+    try {
+        // Process all files concurrently
+        await Promise.all(
+            req.files.map(async (file) => {
+                await sharp(file.path)
+                    .resize(300, 300)
+                    .toFormat('jpeg')
+                    .jpeg({ quality: 90 })
+                    .toFile(`public/images/blogs/${file.filename}`);
+            })
+        );
+        next(); // Proceed to the next middleware after resizing
+    } catch (err) {
+        console.error(err); // Log the error for debugging
+        res.status(500).json({ message: 'Image processing failed' });
+    }
+};
+
+
 const productImgResize = async (req, res, next) => {
-    if (!req.files) return next();
-    await Promise.all(
-        
-    )
+    if (!req.files) return next(); // If no files, proceed to the next middleware
 
-}
+    try {
+        // Process all files concurrently
+        await Promise.all(
+            req.files.map(async (file) => {
+                await sharp(file.path)
+                    .resize(300, 300)
+                    .toFormat('jpeg')
+                    .jpeg({ quality: 90 })
+                    .toFile(`public/images/products/${file.filename}`);
+                fs.unlinkSync(`public/images/products/${file.filename}`);
+            })
+        );
+        next(); // Proceed to the next middleware after resizing
+    } catch (err) {
+        console.error(err); // Log the error for debugging
+        res.status(500).json({ message: 'Image processing failed' });
+    }
+};
+const BlogImgResize = async (req, res, next) => {
+    if (!req.files) return next(); // If no files, proceed to the next middleware
+
+    try {
+        // Process all files concurrently
+        await Promise.all(
+            req.files.map(async (file) => {
+                await sharp(file.path)
+                    .resize(300, 300)
+                    .toFormat('jpeg')
+                    .jpeg({ quality: 90 })
+                    .toFile(`public/images/blogs/${file.filename}`);
+                fs.unlinkSync(`public/images/blogs/${file.filename}`);
+            })
+        );
+        next(); // Proceed to the next middleware after resizing
+    } catch (err) {
+        console.error(err); // Log the error for debugging
+        res.status(500).json({ message: 'Image processing failed' });
+    }
+};
 
 
-module.exports = {uploadPhoto};
+
+module.exports = { uploadPhoto, productImgResize, blogImgResize };
