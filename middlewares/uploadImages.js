@@ -70,28 +70,7 @@ const productImgResize = async (req, res, next) => {
                     .toFormat('jpeg')
                     .jpeg({ quality: 90 })
                     .toFile(`public/images/products/${file.filename}`);
-                fs.unlinkSync(`public/images/products/${file.filename}`);
-            })
-        );
-        next(); // Proceed to the next middleware after resizing
-    } catch (err) {
-        console.error(err); // Log the error for debugging
-        res.status(500).json({ message: 'Image processing failed' });
-    }
-};
-const BlogImgResize = async (req, res, next) => {
-    if (!req.files) return next(); // If no files, proceed to the next middleware
-
-    try {
-        // Process all files concurrently
-        await Promise.all(
-            req.files.map(async (file) => {
-                await sharp(file.path)
-                    .resize(300, 300)
-                    .toFormat('jpeg')
-                    .jpeg({ quality: 90 })
-                    .toFile(`public/images/blogs/${file.filename}`);
-                fs.unlinkSync(`public/images/blogs/${file.filename}`);
+                    fs.unlinkSync(`public/images/products/${file.filename}`);
             })
         );
         next(); // Proceed to the next middleware after resizing

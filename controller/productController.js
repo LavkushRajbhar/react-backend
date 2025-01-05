@@ -3,8 +3,8 @@ const asyncHandler = require("express-async-handler");
 const slugify = require("slugify");
 const User = require("../models/userModel");
 const validateMongoDbId = require("../utils/validateMongodbId");
-const cloudinaryUploadImg = require("../utils/cloudinary")
 const fs = require("fs");
+const {cloudinaryUploadImg, cloudinaryDeleteImg } = require("../utils/cloudinary");
 // create product
 const createProduct = asyncHandler(async (req, res) => {
 
@@ -222,8 +222,7 @@ const rating = asyncHandler(async (req, res) => {
 
 
 const uploadImages = asyncHandler(async (req, res) => {
-    const { id } = req.params;
-    validateMongoDbId(id);
+    
     try {
         const uploader = (path) => cloudinaryUploadImg(path, "images");
         const urls = [];
@@ -234,24 +233,29 @@ const uploadImages = asyncHandler(async (req, res) => {
             console.log('Uploading file:', path); // Debugging log
             const newPath = await uploader(path);
             urls.push(newPath.url); // Extract URL
-            fs.unlinkSync(path); // Delete the local file after uploading to Cloudinary
+         deleteFile(path); // Delete the local file after uploading to Cloudinary
         }
+        const images = urls.map((file) => {
+            return file;
+        })
+res.json(images);
+    } catch (error) {
+        console.error('Error in uploadImages:', error); // Log errors
+        throw new Error("Invalid product ID");
+    }
+});
+const deleteImages = asyncHandler(async (req, res) => {
+    const { id } = req.params;
+    
+    try {
+        const deleted = (path) => cloudinaryDeleteImg(id, "images");
+        res.json({success:"Deleted images"})
+    
 
-        console.log('Uploaded URLs:', urls); // Debugging log
-
-        const findProduct = await Product.findByIdAndUpdate(
-            id,
-            { images: urls },
-            { new: true }
-        );
-
-        console.log('Updated Product:', findProduct); // Debugging log
-
-        res.json(findProduct);
     } catch (error) {
         console.error('Error in uploadImages:', error); // Log errors
         throw new Error("Invalid product ID");
     }
 });
 
-module.exports = { createProduct, getAProduct, getAllProduct, updateProducts, deleteProducts, addToWishlist, rating, uploadImages }
+module.exports = { createProduct, getAProduct, getAllProduct, updateProducts, deleteProducts, addToWishlist, rating, uploadImages,deleteImages }

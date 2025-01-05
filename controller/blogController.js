@@ -39,7 +39,7 @@ const getABlog = asyncHandler(async (req, res) => {
     const { id } = req.params;
     try {
         const getABlog = await Blog.findById(id).populate("likes");
-        const updateViews=await Blog.findByIdAndUpdate(id, 
+        const updateViews = await Blog.findByIdAndUpdate(id,
             {
                 $inc: { numViews: 1 },
             },
@@ -48,7 +48,7 @@ const getABlog = asyncHandler(async (req, res) => {
         res.json({
             status: "success",
             getABlog,
-            
+
         });
     }
     catch (error) {
@@ -215,7 +215,7 @@ const uploadBlogImages = asyncHandler(async (req, res) => {
             // console.log('Uploading file:', path); // Debugging log
             const newPath = await uploader(path);
             urls.push(newPath.url); // Extract URL
-            fs.unlinkSync(path); // Delete the local file after uploading to Cloudinary
+            deleteFile(path); // Delete the local file after uploading to Cloudinary
         }
 
         // console.log('Uploaded URLs:', urls); // Debugging log
